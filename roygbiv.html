@@ -1,0 +1,293 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8"> 
+<title>ROY_G_BIV</title>
+<style>
+@font-face {
+font-family: raleway;
+src: url('../../fonts/raleway_thin-webfont.eot');
+src: local("☺"),
+url('../../fonts/raleway_thin-webfont.woff') format("woff"),
+url('../../fonts/raleway_thin.otf') format("opentype");
+}
+@font-face {
+font-family: opensans;
+src: url('../../fonts/opensans-regular-webfont.eot');
+src: local("☺"),
+url('../../fonts/opensans-regular-webfont.woff') format("woff"),
+url('../../fonts/opensans-regular-webfont.ttf') format("truetype");
+}
+body {
+background-color: #FFFFFF;
+}
+h1 {
+font-family: raleway, arial;
+font-size: 30px;
+padding: 10px;
+color: #FFFFFF;
+}
+p {
+font-family: raleway, arial;
+font-size: 20px;
+color: #000000;
+}
+a {
+font-family: opensans, arial;
+text-decoration: none;
+color: #FFFFFF;
+}
+ul {
+list-style: none;
+margin: 0px;
+padding: 0px;
+}
+li {
+display: block;
+width: 150px;
+padding: 5px;
+margin: 15px;
+margin-left: 0;
+text-align: center;
+background-color: #000000;
+border-radius: 8px;
+}
+.smalltext {
+font-family: opensans, arial;
+font-size: 13px;
+color: #000000;
+}
+#headerholder {
+width: 100%;
+height: auto;
+background-color: #000000;
+padding: 0;
+margin: 0;
+}
+#canvasholder {
+position: absolute;
+top: 130px;
+left: 350px;
+width: 700px;
+height: 500px;
+background-color: #000000;
+}
+canvas {
+margin: 0px;
+padding: 50px;
+}
+</style>
+<script>
+var uploadedImage = new Image;
+var width;
+var height;
+window.onload = function() {
+    var input = document.getElementById('input');
+    input.addEventListener('change', handleFiles);
+    var kaleidoscope = document.getElementById('kaleidoscope');
+    kaleidoscope.addEventListener('click', kaleidoscopeEffect);
+    var pixel = document.getElementById('pixel');
+    pixel.addEventListener('click', pixelateEffect);
+    var invert = document.getElementById('invert');
+    invert.addEventListener('click', invertEffect);
+    var fractal_sierpinski = document.getElementById('fractal_sierpinski');
+    fractal_sierpinski.addEventListener('click', fractalSierpinskiEffect);
+    var fractal_horizon = document.getElementById('fractal_horizon');
+    fractal_horizon.addEventListener('click', fractalHorizonEffect);
+    var revert = document.getElementById('revert');
+    revert.addEventListener('click', revertOriginal);
+    var save = document.getElementById('save');
+    save.addEventListener('click', saveImage);
+}
+function handleFiles(e) {
+    var canvas = document.getElementById("canvas");
+	var context = canvas.getContext("2d");
+    var reader = new FileReader;
+    reader.onload = function(event) {
+        uploadedImage.src = event.target.result;
+        uploadedImage.onload = function() {
+        	var max_width = 600;
+			var max_height = 400;
+			width = uploadedImage.width;
+			height = uploadedImage.height;
+ 				if (width > height) {
+  					if (width > max_width) {
+    				height *= max_width / width;
+    				width = max_width;
+ 	 				}
+				} 
+			else {
+  				if (height > max_height) {
+    			width *= max_height / height;
+    			height = max_height;
+  				}
+			}
+			canvas.width = width;
+			canvas.height = height;
+			context.drawImage(uploadedImage, 0, 0, width, height);
+		}
+    }
+    reader.readAsDataURL(e.target.files[0]);
+}
+var kaleidoscopeCount = 0;
+function kaleidoscopeEffect() {
+	kaleidoscopeCount++;
+	if (kaleidoscopeCount<2) {
+	var canvas = document.getElementById("canvas");
+	var context = canvas.getContext("2d");
+	var canvasData = canvas.toDataURL("image/png");
+	var img = document.createElement("img");
+	img.src = canvasData;
+		img.onload = function() {
+		context.clearRect(0, 0, width, height);
+		context.drawImage(img, 0, 0, width/2, height/2);
+		// Bottom left
+		context.setTransform(1, 0, 0, 1, 0, 0); // Reset the transformation matrix
+		context.translate(0, height);
+		context.scale(1, -1);
+		context.drawImage(img, 0, 0, width/2, height/2);
+		// Bottom right
+		context.setTransform(1, 0, 0, 1, 0, 0);
+		context.translate(width, height);
+		context.scale(-1, -1);
+		context.drawImage(img, 0, 0, width/2, height/2);
+		// Top right
+		context.setTransform(1, 0, 0, 1, 0, 0);
+		context.translate(width, 0);
+		context.scale(-1, 1);
+		context.drawImage(img, 0, 0, width/2, height/2);
+		}
+	}
+}
+function pixelateEffect() {
+	var canvas = document.getElementById("canvas");
+	var context = canvas.getContext("2d");
+	var canvasData = canvas.toDataURL("image/png");
+	var img = document.createElement("img");
+	img.src = canvasData;
+	img.onload = function() {
+		context.clearRect(0, 0, width, height);
+		context.drawImage(img, 0, 0, width, height);
+		var imageData = context.getImageData(0, 0, width, height);
+		var pixels = imageData.data;
+		context.clearRect(0, 0, width, height);
+		var numTileRows = Math.round(height/5);
+		var numTileCols = Math.round(width/5);
+		var tileWidth = imageData.width/numTileCols;
+		var tileHeight = imageData.height/numTileRows;
+		for (var r = 0; r < numTileRows; r++) {
+			for (var c = 0; c < numTileCols; c++) {
+				var x = (c*tileWidth)+(tileWidth/2);
+				var y = (r*tileHeight)+(tileHeight/2);
+				var pos = (Math.floor(y)*(imageData.width*4))+(Math.floor(x)*4);
+				var red = pixels[pos];
+				var green = pixels[pos+1];
+				var blue = pixels[pos+2];
+					context.fillStyle = "rgb("+red+", "+green+", "+blue+")";
+					context.beginPath();
+					context.arc(x, y, tileWidth/2, 0, Math.PI*2, false);
+					context.closePath();
+					context.fill();
+			}
+		}
+	}
+}
+function invertEffect() {
+	var canvas = document.getElementById("canvas");
+	var context = canvas.getContext("2d");
+	var canvasData = canvas.toDataURL("image/png");
+	var img = document.createElement("img");
+	img.src = canvasData;
+	img.onload = function() {
+		context.clearRect(0, 0, width, height);
+		context.drawImage(img, 0, 0, width, height);
+		var imageData = context.getImageData(0, 0, width, height);
+		var pixels = imageData.data;
+		var numPixels = pixels.length;
+		context.clearRect(0, 0, width, height);
+		for (var i = 0; i < numPixels; i++) {
+			pixels[i*4] = 255-pixels[i*4]; // Red
+			pixels[i*4+1] = 255-pixels[i*4+1]; // Green
+			pixels[i*4+2] = 255-pixels[i*4+2]; // Blue
+		}
+		context.putImageData(imageData, 0, 0);
+	}
+}
+function fractalHorizonEffect() {
+	var canvas = document.getElementById("canvas");
+	var context = canvas.getContext("2d");
+	var canvasData = canvas.toDataURL("image/png");
+	var img = document.createElement("img");
+	img.src = canvasData;
+	img.onload = function() {
+		context.drawImage(img, 0, 0, canvas.width/2, canvas.width/2);
+		context.translate(0, canvas.width);
+		context.scale(-1, -1);
+		context.drawImage(img, 0, 0, canvas.width/2, canvas.width/2);
+		context.setTransform(1, 0, 0, 1, 0, 0);
+		context.translate(canvas.width, 0);
+		context.scale(-1, 1);
+		context.drawImage(img, 0, 0, canvas.width/2, canvas.width/2);
+		context.setTransform(1, 0, 0, 1, 0, 0); // Reset the transformation matrix
+	}
+}
+function fractalSierpinskiEffect() {
+	var canvas = document.getElementById("canvas");
+	var context = canvas.getContext("2d");
+	var canvasData = canvas.toDataURL("image/png");
+	var img = document.createElement("img");
+	img.src = canvasData;
+	img.onload = function() {
+		context.drawImage(img, 0, 0, canvas.width/2, canvas.height/2);
+		context.setTransform(1, 0, 0, 1, 0, 0); // Reset the transformation matrix
+		context.translate(0, canvas.height);
+		context.scale(1, -1);
+		context.drawImage(img, 0, 0, canvas.width/2, canvas.height/2);
+		context.setTransform(1, 0, 0, 1, 0, 0);
+		context.translate(canvas.width, 0);
+		context.scale(-1, 1);
+		context.drawImage(img, 0, 0, canvas.width/2, canvas.height/2);
+		context.setTransform(1, 0, 0, 1, 0, 0);
+	}
+}
+function revertOriginal() {
+	var canvas = document.getElementById("canvas");
+	var context = canvas.getContext("2d");
+		kaleidoscopeCount = 0;
+		context.clearRect(0, 0, width, height);
+		context.setTransform(1, 0, 0, 1, 0, 0);
+		context.drawImage(uploadedImage, 0, 0, width, height);
+}
+function saveImage() {
+	var canvas = document.getElementById("canvas");
+	var canvasData = canvas.toDataURL("image/jpeg");
+	var img = document.createElement("img");
+		img.src = canvasData;
+		window.open(img.src);
+}
+</script>
+</head>
+<body>
+<div id="headerholder">
+<h1><span style="color:#FF0000;">R</span><span style="color:#FFA500;">O</span><span style="color:#FFFF00;">Y</span>&nbsp;<span style="color:#008000;">G</span>&nbsp;<span style="color:#0000FF;">B</span><span style="color:#4B0082;">I</span><span style="color:#EE82EE;">V</span></h1>
+</div>
+<p>Upload Image</p>
+<input type="file" id="input" />
+<p>Mix and Match Effects</p>
+<ul>
+<a href="JavaScript:void(0);" id="kaleidoscope"><span style="color:#FF0000;"><li>Kaleidoscope</li></span></a>
+<a href="JavaScript:void(0);" id="invert"><span style="color:#FFA500;"><li>Invert</li></span></a>
+<a href="JavaScript:void(0);" id="pixel"><span style="color:#FFFF00;"><li>Pixelate</li></span></a>
+<a href="JavaScript:void(0);" id="fractal_sierpinski"><span style="color:#008000;"><li>Sierpinski Redux</li></span></a>
+<a href="JavaScript:void(0);" id="fractal_horizon"><span style="color:#0000FF;"><li>Horizon</li></span></a>
+<a href="JavaScript:void(0);" id="revert"><span style="color:#4B0082;"><li>Revert to Original</li></span></a>
+<a href="JavaScript:void(0);" id="save"><span style="color:#EE82EE;"><li>Save Image</li></span></a>
+</ul>
+<p class="smalltext">Keep clicking Sierpinski Redux and Horizon for fractals.</p>
+<p class="smalltext">(Sierpinski Redux or Horizon x 8) + Kaleidoscope = ☺</p>
+<p class="smalltext">Doesn't work in Safari = ☹</p>
+<div id="canvasholder">
+<canvas width="600" height="400" id="canvas" />
+</div>
+</body>
+</html>​
