@@ -5,7 +5,7 @@ Roy G. Biv is a small client-side image manipulation app. It uses the HTML5 File
 
 usage
 =====
-Host file. Everything is wrapped in one html page.
+Open file in browser. Everything is wrapped in one html page.
 
 version notes
 =============
